@@ -1,0 +1,63 @@
+# docker-compose.yml — TEMPLATE
+# Copy this file, fill in the values marked with <...>, and you're ready.
+# See README.md for a full explanation of every option.
+
+services:
+  qbit-media-cleaner:
+    build: .
+    container_name: qbit-media-cleaner
+    
+    # ── User Permissions ───────────────────────────────────────────────────
+    # Strongly recommended: Run the container as your host user so it can 
+    # read/delete media files. Get your uid/gid by running `id` on the host.
+    # user: "1000:1000"
+    
+    restart: unless-stopped
+
+    environment:
+      # ── qBittorrent WebUI credentials ──────────────────────────────────────
+      QB_HOST: "<qbittorrent-host-or-ip>"   # container name or IP address
+      QB_PORT: "8080"                        # WebUI port (default: 8080)
+      QB_USER: "<username>"
+      QB_PASS: "<password>"
+
+      # ── Media library paths (inside the container) ─────────────────────────
+      # Colon-separated list of directories that Radarr/Sonarr import into.
+      # These must match the volume mount destinations below.
+      MEDIA_DIRS: "/media/tv:/media/movies"
+
+      # ── Behaviour ──────────────────────────────────────────────────────────
+      # How often (seconds) to poll the qBittorrent API for removed torrents.
+      POLL_INTERVAL: "60"
+
+      # Scan for already-orphaned files (link count=1) on every startup.
+      SCAN_ORPHANS: "true"
+
+      # ⚠ IMPORTANT: keep DRY_RUN=true until you have reviewed the logs.
+      # Only set to false once you are confident the right files are targeted.
+      DRY_RUN: "true"
+
+      # Set to DEBUG for inode-level detail during troubleshooting.
+      LOG_LEVEL: "INFO"
+
+    volumes:
+      # Map your host media directories into the container.
+      # Format: <host-path>:<container-path>:rw
+      - <host-path-to-tv>:/media/tv:rw
+      - <host-path-to-movies>:/media/movies:rw
+
+    # Use host networking when qBittorrent is not in Docker or is on a
+    # different network. Replace with a named network if preferred (see README).
+    network_mode: host
+
+    # ── Named network alternative ──────────────────────────────────────────
+    # If qBittorrent runs as a Docker container on a shared bridge network,
+    # comment out network_mode above and uncomment the block below.
+    # Set QB_HOST to the qBittorrent container name.
+    #
+    # networks:
+    #   - <your-network-name>
+    #
+    # networks:
+    #   <your-network-name>:
+    #     external: true
